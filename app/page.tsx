@@ -85,7 +85,7 @@ export default function Page() {
   }, [router])
 
   if (loading) {
-    return <div className="flex h-screen items-center justify-center"><div className="w-8 h-8 border-4 border-primary border-t-transparent rounded-full animate-spin"></div></div>
+    return <div className="flex flex-col h-screen items-center justify-center bg-background gap-4 animate-fade-in"><div className="w-20 h-20 rounded-3xl bg-primary text-primary-foreground flex items-center justify-center animate-pulse shadow-2xl"><svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21 12V7H5a2 2 0 0 1 0-4h14v4"/><path d="M3 5v14a2 2 0 0 0 2 2h16v-5"/><path d="M18 12a2 2 0 0 0 0 4h4v-4Z"/></svg></div><p className="text-muted-foreground text-sm font-medium tracking-widest animate-pulse">CARGANDO...</p></div>
   }
 
   return <FinanceApp {...data} />
