@@ -123,3 +123,15 @@ export async function toggleRecurringActive(id: string, isActive: boolean) {
   if (error) return { error: 'Error al actualizar el estado' }
   return { success: true }
 }
+
+// Profile
+export async function updateProfileName(fullName: string) {
+  const supabase = createClient()
+  const { data: userData } = await supabase.auth.getUser()
+  if (!userData?.user) return { error: 'No autorizado' }
+  const { error } = await supabase.from('profiles').update({ full_name: fullName }).eq('id', userData.user.id)
+  if (error) return { error: 'Error al actualizar perfil' }
+  await supabase.auth.updateUser({ data: { full_name: fullName } })
+  return { success: true }
+}
+

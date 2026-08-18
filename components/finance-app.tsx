@@ -229,7 +229,11 @@ function RecurringScreen({ back, onCreate, recurring, openDetail }: any) {
 
 function CalendarScreen({ back, transactions }: any) { const [day,setDay]=useState(17); return <><Header title="Calendario" subtitle="Agosto 2026" back onBack={back}/><div className="calendar-card"><div className="week">{['L','M','M','J','V','S','D'].map((d,i)=><span key={i}>{d}</span>)}</div><div className="days">{Array.from({length:35},(_,i)=>i<5?'':i-4).map((d,i)=><button key={i} disabled={!d} className={day===d?'selected':''} onClick={()=>d&&setDay(Number(d))}><span>{d}</span>{[3,8,12,17,21,24,28].includes(Number(d))&&<i className={Number(d)%2?'expense':'income'}/>}</button>)}</div></div><section className="day-group"><p>{day} DE AGOSTO</p><div className="list-card">{transactions?.slice(0,3).map((t:any)=><TransactionRow key={t.id} item={t}/>)}</div><div className="day-total"><span>Total gastado</span><b>$25.55</b></div></section></> }
 
-function ProfileScreen({ navigate, dark, toggleDark, profile }: { navigate:(s:Screen)=>void; dark:boolean; toggleDark:()=>void; profile?: any }) { 
+function ProfileScreen({ navigate, dark, toggleDark, profile }: { navigate:(s:string)=>void; dark:boolean; toggleDark:()=>void; profile?: any }) { 
+  const [editing, setEditing] = useState(false)
+  const [newName, setNewName] = useState(profile?.full_name || '')
+  const [saving, setSaving] = useState(false)
+
   const items=[['Metas de ahorro',Target,'goals'],['Reportes y análisis',PieChart,'reports'],['Resumen mensual',FileText,'summary'],['Pagos recurrentes',CalendarDays,'recurring'],['Calendario financiero',CalendarDays,'calendar'],['Métodos de pago',Wallet,'payments']] as const; 
   const initials = profile?.full_name ? profile.full_name.substring(0, 2).toUpperCase() : 'US'; 
   const memberSince = new Date(profile?.created_at || Date.now()).toLocaleDateString('es-ES', { month: 'long', year: 'numeric' }); 
@@ -241,7 +245,53 @@ function ProfileScreen({ navigate, dark, toggleDark, profile }: { navigate:(s:Sc
     window.location.href = '/login'
   }
 
-  return <><Header title="Perfil" action={<Button variant="ghost" size="icon"><MoreHorizontal/></Button>}/><section className="profile-card"><div className="profile-avatar">{initials}<button><Camera/></button></div><h2>{profile?.full_name || 'Usuario'}</h2><p>{profile?.email || 'correo@ejemplo.com'}</p><span>Miembro desde {memberSince}</span></section><p className="settings-label">FINANZAS</p><div className="settings-list">{items.map(([label,Icon,path])=><button key={label as string} onClick={()=>navigate(path as Screen)}><span><Icon/></span><b>{label as string}</b><ChevronRight/></button>)}</div><p className="settings-label">PREFERENCIAS</p><div className="settings-list"><button onClick={toggleDark}><span>{dark?<Sun/>:<Moon/>}</span><b>{dark?'Modo claro':'Modo oscuro'}</b><i className={`switch ${dark?'on':''}`} /></button><button><span><Bell/></span><b>Notificaciones</b><ChevronRight/></button><button><span><Shield/></span><b>Seguridad</b><ChevronRight/></button><button onClick={handleLogout} className="logout w-full text-left"><span><LogOut/></span><b>Cerrar sesión</b></button></div></> }
+  const saveName = async () => {
+    if (!newName.trim() || newName === profile?.full_name) return setEditing(false)
+    setSaving(true)
+    const { updateProfileName } = await import('@/lib/api')
+    await updateProfileName(newName)
+    window.location.reload() // Reload to refresh data
+  }
+
+  return <div className="animate-fade-in"><Header title="Perfil" action={<Button variant="ghost" size="icon"><MoreHorizontal/></Button>}/><section className="profile-card"><div className="profile-avatar">{initials}</div>
+    {editing ? (
+      <div className="flex gap-2 items-center mt-2">
+        <input type="text" value={newName} onChange={e=>setNewName(e.target.value)} className="w-full p-2 border rounded-md text-sm" disabled={saving}/>
+        <Button size="sm" onClick={saveName} disabled={saving}>{saving ? '...' : 'Ok'}</Button>
+        <Button size="sm" variant="ghost" onClick={()=>setEditing(false)}>X</Button>
+      </div>
+    ) : (
+      <h2 className="flex items-center gap-2 justify-center">{profile?.full_name || 'Usuario'} <button onClick={()=>setEditing(true)} className="text-muted-foreground"><Pencil size={14}/></button></h2>
+    )}
+    <p>{profile?.email || 'correo@ejemplo.com'}</p><span>Miembro desde {memberSince}</span></section><p className="settings-label">FINANZAS</p><div className="settings-list">{items.map(([label,Icon,path])=><button key={label as string} onClick={()=>navigate(path as string)}><span><Icon/></span><b>{label as string}</b><ChevronRight/></button>)}</div><p className="settings-label">PREFERENCIAS</p><div className="settings-list"><button onClick={toggleDark}><span>{dark?<Sun/>:<Moon/>}</span><b>{dark?'Modo claro':'Modo oscuro'}</b><i className={`switch ${dark?'on':''}`} /></button><button onClick={()=>navigate('notifications')}><span><Bell/></span><b>Notificaciones</b><ChevronRight/></button><button onClick={()=>navigate('security')}><span><Shield/></span><b>Seguridad</b><ChevronRight/></button><button onClick={handleLogout} className="logout w-full text-left"><span><LogOut/></span><b>Cerrar sesión</b></button></div></div> }
+
+function NotificationsScreen({ back }: any) {
+  const [opts, setOpts] = useState({ budgets: true, recurring: true, goals: true })
+  return <div className="animate-fade-in"><Header title="Notificaciones" subtitle="Gestiona tus alertas" back onBack={back} />
+  <div className="p-4 space-y-4">
+    <div className="bg-card p-4 rounded-2xl flex items-center justify-between border"><div><b>Presupuestos</b><p className="text-sm text-muted-foreground">Alertas al acercarte al límite</p></div><i className={`switch ${opts.budgets?'on':''}`} onClick={()=>setOpts(o=>({...o, budgets:!o.budgets}))}/></div>
+    <div className="bg-card p-4 rounded-2xl flex items-center justify-between border"><div><b>Pagos Recurrentes</b><p className="text-sm text-muted-foreground">Recordatorios antes del cobro</p></div><i className={`switch ${opts.recurring?'on':''}`} onClick={()=>setOpts(o=>({...o, recurring:!o.recurring}))}/></div>
+    <div className="bg-card p-4 rounded-2xl flex items-center justify-between border"><div><b>Metas Completadas</b><p className="text-sm text-muted-foreground">Celebraciones al lograr metas</p></div><i className={`switch ${opts.goals?'on':''}`} onClick={()=>setOpts(o=>({...o, goals:!o.goals}))}/></div>
+  </div></div>
+}
+
+function SecurityScreen({ back }: any) {
+  const [opts, setOpts] = useState({ bio: false })
+  const handleReset = async () => {
+    const { createClient } = await import('@/lib/supabase/client')
+    const supabase = createClient()
+    const { data: { user } } = await supabase.auth.getUser()
+    if (user?.email) {
+      await supabase.auth.resetPasswordForEmail(user.email)
+      alert('Correo de recuperación enviado a ' + user.email)
+    }
+  }
+  return <div className="animate-fade-in"><Header title="Seguridad" subtitle="Protege tu cuenta" back onBack={back} />
+  <div className="p-4 space-y-4">
+    <div className="bg-card p-4 rounded-2xl flex items-center justify-between border"><div><b className="flex items-center gap-2"><LockKeyhole size={16}/> Cambiar Contraseña</b><p className="text-sm text-muted-foreground">Te enviaremos un correo seguro</p></div><Button size="sm" variant="secondary" onClick={handleReset}>Enviar</Button></div>
+    <div className="bg-card p-4 rounded-2xl flex items-center justify-between border opacity-50"><div><b className="flex items-center gap-2"><Eye size={16}/> Bloqueo Biométrico</b><p className="text-sm text-muted-foreground">Próximamente en V2</p></div><i className={`switch ${opts.bio?'on':''}`} /></div>
+  </div></div>
+}
 
 function PaymentsScreen({ back, paymentMethods }: any) { 
   return <><Header title="Métodos de pago" subtitle="Administra cómo pagas" back onBack={back} action={<Button size="icon"><Plus/></Button>}/>
@@ -487,56 +537,85 @@ function FormSheet({ kind, close, done, categories, paymentMethods }: any) {
   </div>
   
   {errorMsg && <p className="text-sm font-medium text-destructive mt-2">{errorMsg}</p>}
-  <Button type="submit" className="h-12 w-full rounded-xl mt-4" disabled={isPending}>{isPending ? 'Guardando...' : `Guardar ${kind==='movement'?'movimiento':kind==='budget'?'presupuesto':kind==='goal'?'meta':'pago'}`}{!isPending && <Check data-icon="inline-end"/>}</Button>
+<Button type="submit" className="h-12 w-full rounded-xl mt-4" disabled={isPending}>{isPending ? 'Guardando...' : `Guardar ${kind==='movement'?'movimiento':kind==='budget'?'presupuesto':kind==='goal'?'meta':'pago'}`}{!isPending && <Check data-icon="inline-end"/>}</Button>
   </form>
   </section></div> 
 }
 
-function BottomNav({ active, navigate, openAdd }: { active:Screen; navigate:(s:Screen)=>void; openAdd:()=>void }) { const nav=[['home','Inicio',Home],['movements','Movimientos',Receipt],['add','',Plus],['budgets','Presupuestos',PieChart],['profile','Perfil',User]] as const; return <nav className="bottom-nav">{nav.map(([id,label,Icon])=>id==='add'?<button key={id} className="add-button" onClick={openAdd} aria-label="Registrar movimiento"><Icon/></button>:<button key={id} className={active===id?'active':''} onClick={()=>navigate(id)}><Icon/><span>{label}</span></button>)}</nav> }
+function BottomNav({ active, navigate, openAdd }: { active:string; navigate:(s:string)=>void; openAdd:()=>void }) { const nav=[['home','Inicio',Home],['movements','Movimientos',Receipt],['add','',Plus],['budgets','Presupuestos',PieChart],['profile','Perfil',User]] as const; return <nav className="bottom-nav">{nav.map(([id,label,Icon])=>id==='add'?<button key={id} className="add-button" onClick={openAdd} aria-label="Registrar movimiento"><Icon/></button>:<button key={id} className={active===id?'active':''} onClick={()=>navigate(id)}><Icon/><span>{label}</span></button>)}</nav> }
 
 export function FinanceApp({ profile, categories, paymentMethods, transactions, budgets, goals, contributions, recurring, metrics }: any) {
-  const [screen,setScreen]=useState<Screen>('home'); const [previous,setPrevious]=useState<Screen>('home'); const [form,setForm]=useState<null|'movement'|'budget'|'goal'|'recurring'>(null); const [detail,setDetail]=useState<any>(null); const [toastMsg,setToastMsg]=useState(''); const [dark,setDark]=useState(false)
+  const [screen, setScreen] = useState<string>('home')
+  const [previous, setPrevious] = useState<string>('home')
+  const [form, setForm] = useState<string | null>(null)
+  const [detail, setDetail] = useState<any>(null)
+  const [toastMsg, setToastMsg] = useState('')
   const [notifications, setNotifications] = useState<string[]>([])
+  const [dark, setDark] = useState(false)
 
   useEffect(() => {
-    // Generate one-time session notifications
+    // Theme persistence
+    const savedTheme = localStorage.getItem('theme')
+    const isDark = savedTheme === 'dark' || (!savedTheme && window.matchMedia('(prefers-color-scheme: dark)').matches)
+    if (isDark) {
+      setDark(true)
+      document.documentElement.classList.add('dark')
+    }
+  }, [])
+
+  useEffect(() => {
+    // Android Hardware Back Button
+    let listener: any = null;
+    import('@capacitor/app').then(({ App }) => {
+      listener = App.addListener('backButton', () => {
+        if (detail) setDetail(null)
+        else if (form) setForm(null)
+        else if (screen !== 'home') { setScreen(previous || 'home') }
+        else App.exitApp()
+      })
+    }).catch(() => {})
+    return () => { if (listener && listener.remove) listener.remove() }
+  }, [screen, detail, form, previous])
+
+  useEffect(() => {
     if (sessionStorage.getItem('notifs_shown')) return;
     const alerts: string[] = []
     
-    // Budgets
     budgets?.forEach((b: any) => {
       const p = Number(b.used_percentage)
       if (p >= 100) alerts.push(`¡Alerta! Has superado tu presupuesto de ${b.category_name}.`)
       else if (p >= 85) alerts.push(`Cuidado, estás cerca del límite de ${b.category_name}.`)
     })
     
-    // Upcoming recurring
     const today = new Date(); today.setHours(0,0,0,0);
     const in3Days = new Date(today); in3Days.setDate(today.getDate() + 3);
     recurring?.forEach((r: any) => {
       if (!r.is_active) return;
       const nextDate = new Date(r.next_execution_date)
-      if (nextDate >= today && nextDate <= in3Days) {
-        alerts.push(`Tu pago recurrente "${r.name}" vence en los próximos días.`)
-      }
+      if (nextDate >= today && nextDate <= in3Days) alerts.push(`Tu pago recurrente "${r.name}" vence pronto.`)
     })
     
-    // Goals completed
     goals?.forEach((g: any) => {
-      if (Number(g.progress_percentage) >= 100 && g.status !== 'completed') {
-        alerts.push(`¡Felicidades! Has completado tu meta: ${g.name}.`)
-      }
+      if (Number(g.progress_percentage) >= 100 && g.status !== 'completed') alerts.push(`¡Felicidades! Completaste la meta: ${g.name}.`)
     })
 
     if (alerts.length > 0) {
-      setNotifications(alerts.slice(0, 3)) // Max 3 to not spam
+      setNotifications(alerts.slice(0, 3))
       sessionStorage.setItem('notifs_shown', 'true')
     }
   }, [budgets, recurring, goals])
 
-  const navigate=(next:Screen)=>{setPrevious(screen);setScreen(next);window.scrollTo({top:0,behavior:'smooth'})}; const back=()=>navigate(previous); const save=()=>{setForm(null);setToastMsg('Guardado correctamente');setTimeout(()=>setToastMsg(''),3000)}; const toggleDark=()=>{setDark(!dark);document.documentElement.classList.toggle('dark')}
+  const navigate=(next:string)=>{setPrevious(screen);setScreen(next);window.scrollTo({top:0,behavior:'smooth'})}; 
+  const back=()=>navigate(previous || 'home'); 
+  const save=()=>{setForm(null);setToastMsg('Guardado correctamente');setTimeout(()=>setToastMsg(''),3000)}; 
+  const toggleDark=()=>{
+    const next = !dark
+    setDark(next);
+    localStorage.setItem('theme', next ? 'dark' : 'light')
+    document.documentElement.classList.toggle('dark', next)
+  }
   
-  return <main className="app-stage"><div className="app-shell"><div className="app-content">
+  return <main className="app-stage animate-fade-in"><div className="app-shell"><div className="app-content">
     
     {notifications.length > 0 && (
       <div className="fixed top-4 left-0 right-0 z-50 flex flex-col gap-2 items-center pointer-events-none px-4">
@@ -559,6 +638,8 @@ export function FinanceApp({ profile, categories, paymentMethods, transactions, 
     {screen==='recurring'&&<RecurringScreen back={back} onCreate={()=>setForm('recurring')} recurring={recurring} openDetail={setDetail}/>} 
     {screen==='calendar'&&<CalendarScreen back={back} transactions={transactions}/>} 
     {screen==='payments'&&<PaymentsScreen back={back} paymentMethods={paymentMethods}/>}
+    {screen==='notifications'&&<NotificationsScreen back={back}/>}
+    {screen==='security'&&<SecurityScreen back={back}/>}
     </div><BottomNav active={screen} navigate={navigate} openAdd={()=>setForm('movement')}/></div>
     {detail?.type === 'movement' && <DetailSheet item={detail.data} close={()=>setDetail(null)}/>} 
     {detail?.type === 'budget' && <BudgetDetailSheet item={detail.data} close={()=>setDetail(null)}/>} 
