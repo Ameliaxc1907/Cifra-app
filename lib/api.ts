@@ -10,7 +10,10 @@ export async function createTransaction(data: any) {
     ...data,
     user_id: userData.user.id
   })
-  if (error) return { error: 'Error al registrar el movimiento' }
+  if (error) {
+    console.error('Insert transaction error:', error)
+    return { error: error.message }
+  }
   return { success: true }
 }
 

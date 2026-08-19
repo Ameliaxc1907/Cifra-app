@@ -15,7 +15,7 @@ import { getPeriodRange, filterTransactionsByRange, calculateMetrics, getCategor
 type Screen = 'home' | 'movements' | 'budgets' | 'profile' | 'goals' | 'reports' | 'summary' | 'recurring' | 'calendar' | 'payments'
 type Entry = 'app'
 
-const money = (value: number) => new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(Math.abs(value))
+const money = (value: number) => new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(value)
 
 function Logo() {
   return <div className="flex items-center gap-2 font-semibold tracking-tight"><span className="grid size-9 place-items-center rounded-xl bg-primary text-primary-foreground"><Wallet /></span><span className="text-xl">Cifra</span></div>
@@ -71,7 +71,7 @@ function HomeScreen({ navigate, openAdd, openDetail, profile, metrics, transacti
     return 'Buenas noches';
   }
   
-  return <><header className="home-header"><div><p>{getGreeting()}, {firstName}</p><h1>Tu panorama financiero</h1></div><div className="flex items-center gap-2"><Button variant="ghost" size="icon" aria-label="Notificaciones"><Bell /></Button><button className="avatar" onClick={() => navigate('profile')}>{initials}</button></div></header><section className="balance-card"><div className="balance-top"><div><span>Balance del mes</span><strong>{show ? money(metrics.balance || 0) : '••••••'}</strong></div><button onClick={() => setShow(!show)} aria-label="Mostrar u ocultar saldo">{show ? <EyeOff/> : <Eye/>}</button></div><div className="balance-metrics"><div><TrendingUp/><span>Ingresos</span><b>{money(metrics.income || 0)}</b></div><div><TrendingDown/><span>Gastos</span><b>{money(metrics.expense || 0)}</b></div><div><Sparkles/><span>Ahorro</span><b>{money(metrics.balance || 0)}</b></div></div></section><div className="quick-actions"><button onClick={openAdd}><Plus/><span>Registrar</span></button><button onClick={() => navigate('budgets')}><PieChart/><span>Presupuesto</span></button><button onClick={() => navigate('goals')}><Target/><span>Metas</span></button><button onClick={() => navigate('reports')}><FileText/><span>Reportes</span></button></div><BalanceChart transactions={transactions} period="Mes"/><section className="insight"><span><Lightbulb /></span><div><p>ANÁLISIS DE CIFRA</p><b>{breakdown[0]?.name ? `${breakdown[0].name} es tu mayor gasto` : 'No hay gastos recientes'}</b><small>Revisa tus reportes para más detalles.</small></div><ChevronRight onClick={() => navigate('reports')} className="cursor-pointer"/></section><section className="section-block"><div className="section-title"><div><p>Categorías</p><h2>Resumen de gastos</h2></div><button onClick={() => navigate('reports')}>Ver reporte</button></div><div className="category-grid">
+  return <><header className="home-header"><div><p>{getGreeting()}, {firstName}</p><h1>Tu panorama financiero</h1></div><div className="flex items-center gap-2"><Button variant="ghost" size="icon" aria-label="Notificaciones"><Bell /></Button><button className="avatar" onClick={() => navigate('profile')}>{initials}</button></div></header><section className="balance-card"><div className="balance-top"><div><span>Saldo actual</span><strong>{show ? money(metrics.balance || 0) : '••••••'}</strong></div><button onClick={() => setShow(!show)} aria-label="Mostrar u ocultar saldo">{show ? <EyeOff/> : <Eye/>}</button></div><div className="balance-metrics"><div><TrendingUp/><span>Ingresos</span><b>{money(metrics.income || 0)}</b></div><div><TrendingDown/><span>Gastos</span><b>{money(metrics.expense || 0)}</b></div><div><Sparkles/><span>Ahorro del mes</span><b>{money((metrics.income || 0) - (metrics.expense || 0))}</b></div></div></section><div className="quick-actions"><button onClick={openAdd}><Plus/><span>Registrar</span></button><button onClick={() => navigate('budgets')}><PieChart/><span>Presupuesto</span></button><button onClick={() => navigate('goals')}><Target/><span>Metas</span></button><button onClick={() => navigate('reports')}><FileText/><span>Reportes</span></button></div><BalanceChart transactions={transactions} period="Mes"/><section className="insight"><span><Lightbulb /></span><div><p>ANÁLISIS DE CIFRA</p><b>{breakdown[0]?.name ? `${breakdown[0].name} es tu mayor gasto` : 'No hay gastos recientes'}</b><small>Revisa tus reportes para más detalles.</small></div><ChevronRight onClick={() => navigate('reports')} className="cursor-pointer"/></section><section className="section-block"><div className="section-title"><div><p>Categorías</p><h2>Resumen de gastos</h2></div><button onClick={() => navigate('reports')}>Ver reporte</button></div><div className="category-grid">
   {breakdown.slice(0,4).map((c) => { 
     const Icon = getIcon(c.icon); 
     return <div className="category-card" key={c.name}><span><Icon /></span><div><small>{c.name}</small><b>${c.amount}</b></div><em>{c.percent}%</em></div>
@@ -316,7 +316,7 @@ function PaymentsScreen({ back, paymentMethods }: any) {
   </> 
 }
 
-function DetailSheet({ item, close }: { item:any; close:()=>void }) { 
+function DetailSheet({ item, close, onUpdated }: { item:any; close:()=>void; onUpdated?:()=>void }) { 
   const Icon = getIcon(item.category?.icon || 'circle-dollar-sign')
   const isIncome = item.type === 'income'
   const [isPending, startTransition] = useTransition()
@@ -325,7 +325,8 @@ function DetailSheet({ item, close }: { item:any; close:()=>void }) {
     if (confirm('¿Estás seguro de que deseas eliminar este movimiento?')) {
       startTransition(async () => {
         await deleteTransaction(item.id)
-        close()
+        if (onUpdated) onUpdated()
+        else close()
       })
     }
   }
@@ -333,7 +334,7 @@ function DetailSheet({ item, close }: { item:any; close:()=>void }) {
   return <div className="overlay" onClick={close}><section className="sheet" onClick={e=>e.stopPropagation()}><div className="sheet-handle"/><button className="sheet-close" onClick={close}><X/></button><span className={`detail-icon ${isIncome?'income':''}`}><Icon/></span><small>{isIncome?'INGRESO':'GASTO'}</small><h2>{isIncome?'+':'−'}{money(item.amount)}</h2><p>{item.description}</p><div className="detail-grid"><span><small>Categoría</small><b>{item.category?.name || '-'}</b></span><span><small>Fecha</small><b>{new Date(item.transaction_date).toLocaleDateString()}</b></span><span><small>Método</small><b>{item.payment_method?.name || '-'}</b></span><span><small>Hora</small><b>{new Date(item.transaction_date).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}</b></span></div><div className="sheet-actions"><Button variant="outline" className="h-11 flex-1" disabled><Pencil data-icon="inline-start"/>Editar</Button><Button variant="destructive" className="h-11 flex-1" onClick={handleDelete} disabled={isPending}>{isPending ? 'Eliminando...' : <><Trash2 data-icon="inline-start"/>Eliminar</>}</Button></div></section></div> 
 }
 
-function BudgetDetailSheet({ item, close }: any) { 
+function BudgetDetailSheet({ item, close, onUpdated }: any) { 
   const Icon = getIcon(item.category_icon || 'pie-chart')
   const [isPending, startTransition] = useTransition()
   
@@ -341,7 +342,8 @@ function BudgetDetailSheet({ item, close }: any) {
     if (confirm('¿Estás seguro de que deseas eliminar este presupuesto?')) {
       startTransition(async () => {
         await deleteBudget(item.id)
-        close()
+        if (onUpdated) onUpdated()
+        else close()
       })
     }
   }
@@ -352,7 +354,7 @@ function BudgetDetailSheet({ item, close }: any) {
   <div className="sheet-actions mt-8"><Button variant="outline" className="h-11 flex-1" disabled><Pencil data-icon="inline-start"/>Editar</Button><Button variant="destructive" className="h-11 flex-1" onClick={handleDelete} disabled={isPending}>{isPending ? 'Eliminando...' : <><Trash2 data-icon="inline-start"/>Eliminar</>}</Button></div></section></div> 
 }
 
-function GoalDetailSheet({ item, close, contributions }: any) {
+function GoalDetailSheet({ item, close, contributions, onUpdated, balance }: any) {
   const [isPending, startTransition] = useTransition()
   const [amount, setAmount] = useState('')
   const [errorMsg, setErrorMsg] = useState('')
@@ -363,7 +365,8 @@ function GoalDetailSheet({ item, close, contributions }: any) {
     if (confirm('¿Estás seguro de que deseas eliminar esta meta? Perderás el registro de los aportes.')) {
       startTransition(async () => {
         await deleteGoal(item.id)
-        close()
+        if (onUpdated) onUpdated()
+        else close()
       })
     }
   }
@@ -373,11 +376,15 @@ function GoalDetailSheet({ item, close, contributions }: any) {
     setErrorMsg('')
     const value = Number(amount)
     if (value <= 0) return setErrorMsg('Monto inválido')
+    if (value > balance) return setErrorMsg('No tienes saldo suficiente para aportar esta cantidad.')
     
     startTransition(async () => {
       const res = await createContribution({ goal_id: item.id, amount: value })
       if (res.error) setErrorMsg(res.error)
-      else setAmount('')
+      else {
+        setAmount('')
+        if (onUpdated) onUpdated()
+      }
     })
   }
 
@@ -399,14 +406,15 @@ function GoalDetailSheet({ item, close, contributions }: any) {
   <div className="sheet-actions mt-6"><Button variant="outline" className="h-11 flex-1" disabled><Pencil data-icon="inline-start"/>Editar</Button><Button variant="destructive" className="h-11 flex-1" onClick={handleDelete} disabled={isPending}>{isPending ? 'Eliminando...' : <><Trash2 data-icon="inline-start"/>Eliminar</>}</Button></div></section></div> 
 }
 
-function RecurringDetailSheet({ item, close }: any) {
+function RecurringDetailSheet({ item, close, onUpdated }: any) {
   const [isPending, startTransition] = useTransition()
   
   const handleDelete = () => {
     if (confirm('¿Eliminar esta recurrencia permanentemente?')) {
       startTransition(async () => {
         await deleteRecurringTransaction(item.id)
-        close()
+        if (onUpdated) onUpdated()
+        else close()
       })
     }
   }
@@ -414,7 +422,8 @@ function RecurringDetailSheet({ item, close }: any) {
   const handleToggle = () => {
     startTransition(async () => {
       await toggleRecurringActive(item.id, !item.is_active)
-      close()
+      if (onUpdated) onUpdated()
+      else close()
     })
   }
 
@@ -426,7 +435,7 @@ function RecurringDetailSheet({ item, close }: any) {
   </div></section></div> 
 }
 
-function FormSheet({ kind, close, done, categories, paymentMethods }: any) { 
+function FormSheet({ kind, close, done, categories, paymentMethods, balance }: any) { 
   const [type,setType]=useState('expense'); 
   const titles={movement:'Nuevo movimiento',budget:'Crear presupuesto',goal:'Nueva meta',recurring:'Nuevo pago recurrente'}; 
   const [isPending, startTransition] = useTransition()
@@ -442,8 +451,26 @@ function FormSheet({ kind, close, done, categories, paymentMethods }: any) {
         category_id: formData.get('category_id') as string,
         transaction_date: formData.get('transaction_date') as string,
         type: type,
-        payment_method_id: formData.get('payment_method_id') as string,
+        payment_method_id: formData.get('payment_method_id') as string || undefined,
       }
+      
+      if (!payload.amount || payload.amount <= 0) {
+        setErrorMsg('Por favor ingresa una cantidad válida mayor a 0.')
+        return
+      }
+      if (payload.type === 'expense' && payload.amount > balance) {
+        setErrorMsg('No tienes saldo suficiente para este gasto.')
+        return
+      }
+      if (!payload.description.trim()) {
+        setErrorMsg('Por favor ingresa una descripción.')
+        return
+      }
+      if (!payload.category_id) {
+        setErrorMsg('Por favor selecciona una categoría.')
+        return
+      }
+
       startTransition(async () => {
         const result = await createTransaction(payload)
         if (result.error) setErrorMsg(result.error)
@@ -459,6 +486,16 @@ function FormSheet({ kind, close, done, categories, paymentMethods }: any) {
         month: new Date().getMonth() + 1,
         year: new Date().getFullYear()
       }
+      
+      if (!payload.amount_limit || payload.amount_limit <= 0) {
+        setErrorMsg('Por favor ingresa un límite válido mayor a 0.')
+        return
+      }
+      if (!payload.category_id) {
+        setErrorMsg('Por favor selecciona una categoría.')
+        return
+      }
+
       startTransition(async () => {
         const result = await createBudget(payload)
         if (result.error) setErrorMsg(result.error)
@@ -473,6 +510,16 @@ function FormSheet({ kind, close, done, categories, paymentMethods }: any) {
         target_amount: Number(formData.get('amount')),
         target_date: formData.get('target_date') as string || undefined
       }
+      
+      if (!payload.name.trim()) {
+        setErrorMsg('Por favor ingresa un nombre para la meta.')
+        return
+      }
+      if (!payload.target_amount || payload.target_amount <= 0) {
+        setErrorMsg('Por favor ingresa una cantidad objetivo válida mayor a 0.')
+        return
+      }
+
       startTransition(async () => {
         const result = await createGoal(payload)
         if (result.error) setErrorMsg(result.error)
@@ -492,6 +539,20 @@ function FormSheet({ kind, close, done, categories, paymentMethods }: any) {
         start_date: formData.get('start_date') as string,
         end_date: formData.get('end_date') as string || undefined
       }
+
+      if (!payload.amount || payload.amount <= 0) {
+        setErrorMsg('Por favor ingresa una cantidad válida mayor a 0.')
+        return
+      }
+      if (!payload.name.trim()) {
+        setErrorMsg('Por favor ingresa un nombre.')
+        return
+      }
+      if (!payload.category_id) {
+        setErrorMsg('Por favor selecciona una categoría.')
+        return
+      }
+
       startTransition(async () => {
         const result = await createRecurringTransaction(payload)
         if (result.error) setErrorMsg(result.error)
@@ -550,7 +611,7 @@ function FormSheet({ kind, close, done, categories, paymentMethods }: any) {
 
 function BottomNav({ active, navigate, openAdd }: { active:string; navigate:(s:string)=>void; openAdd:()=>void }) { const nav=[['home','Inicio',Home],['movements','Movimientos',Receipt],['add','',Plus],['budgets','Presupuestos',PieChart],['profile','Perfil',User]] as const; return <nav className="bottom-nav">{nav.map(([id,label,Icon])=>id==='add'?<button key={id} className="add-button" onClick={openAdd} aria-label="Registrar movimiento"><Icon/></button>:<button key={id} className={active===id?'active':''} onClick={()=>navigate(id)}><Icon/><span>{label}</span></button>)}</nav> }
 
-export function FinanceApp({ profile, categories, paymentMethods, transactions, budgets, goals, contributions, recurring, metrics }: any) {
+export function FinanceApp({ profile, categories, paymentMethods, transactions, budgets, goals, contributions, recurring, metrics, onRefresh }: any) {
   const [screen, setScreen] = useState<string>('home')
   const [previous, setPrevious] = useState<string>('home')
   const [form, setForm] = useState<string | null>(null)
@@ -570,17 +631,32 @@ export function FinanceApp({ profile, categories, paymentMethods, transactions, 
   }, [])
 
   useEffect(() => {
-    // Android Hardware Back Button
-    let listener: any = null;
+    // Android Hardware Back Button and Background Restart
+    let listenerBack: any = null;
+    let listenerState: any = null;
     import('@capacitor/app').then(({ App }) => {
-      listener = App.addListener('backButton', () => {
+      listenerBack = App.addListener('backButton', () => {
         if (detail) setDetail(null)
         else if (form) setForm(null)
         else if (screen !== 'home') { setScreen(previous || 'home') }
         else App.exitApp()
       })
+      listenerState = App.addListener('appStateChange', ({ isActive }) => {
+        if (isActive) {
+          const lastBg = localStorage.getItem('lastBgTime')
+          // If in background for more than 15 minutes, reload the app
+          if (lastBg && Date.now() - parseInt(lastBg) > 15 * 60 * 1000) {
+            window.location.reload()
+          }
+        } else {
+          localStorage.setItem('lastBgTime', Date.now().toString())
+        }
+      })
     }).catch(() => {})
-    return () => { if (listener && listener.remove) listener.remove() }
+    return () => { 
+      if (listenerBack && listenerBack.remove) listenerBack.remove() 
+      if (listenerState && listenerState.remove) listenerState.remove() 
+    }
   }, [screen, detail, form, previous])
 
   useEffect(() => {
@@ -611,14 +687,19 @@ export function FinanceApp({ profile, categories, paymentMethods, transactions, 
     }
   }, [budgets, recurring, goals])
 
-  const navigate=(next:string)=>{setPrevious(screen);setScreen(next);window.scrollTo({top:0,behavior:'smooth'})}; 
+    const navigate=(next:string)=>{setPrevious(screen);setScreen(next);window.scrollTo({top:0,behavior:'smooth'})}; 
   const back=()=>navigate(previous || 'home'); 
-  const save=()=>{setForm(null);setToastMsg('Guardado correctamente');setTimeout(()=>setToastMsg(''),3000)}; 
+  const save=()=>{setForm(null);setToastMsg('Guardado correctamente');setTimeout(()=>setToastMsg(''),3000); if(onRefresh) onRefresh(); }; 
   const toggleDark=()=>{
     const next = !dark
     setDark(next);
     localStorage.setItem('theme', next ? 'dark' : 'light')
     document.documentElement.classList.toggle('dark', next)
+  }
+  
+  const handleDetailUpdate = () => {
+    setDetail(null);
+    if(onRefresh) onRefresh();
   }
   
   return <main className="app-stage animate-fade-in"><div className="app-shell"><div className="app-content">
@@ -647,11 +728,11 @@ export function FinanceApp({ profile, categories, paymentMethods, transactions, 
     {screen==='notifications'&&<NotificationsScreen back={back}/>}
     {screen==='security'&&<SecurityScreen back={back}/>}
     </div><BottomNav active={screen} navigate={navigate} openAdd={()=>setForm('movement')}/></div>
-    {detail?.type === 'movement' && <DetailSheet item={detail.data} close={()=>setDetail(null)}/>} 
-    {detail?.type === 'budget' && <BudgetDetailSheet item={detail.data} close={()=>setDetail(null)}/>} 
-    {detail?.type === 'goal' && <GoalDetailSheet item={detail.data} close={()=>setDetail(null)} contributions={contributions}/>} 
-    {detail?.type === 'recurring' && <RecurringDetailSheet item={detail.data} close={()=>setDetail(null)} />}
-    {form&&<FormSheet kind={form} close={()=>setForm(null)} done={save} categories={categories} paymentMethods={paymentMethods}/>} 
+    {detail?.type === 'movement' && <DetailSheet item={detail.data} close={()=>setDetail(null)} onUpdated={handleDetailUpdate}/>} 
+    {detail?.type === 'budget' && <BudgetDetailSheet item={detail.data} close={()=>setDetail(null)} onUpdated={handleDetailUpdate}/>} 
+    {detail?.type === 'goal' && <GoalDetailSheet item={detail.data} close={()=>setDetail(null)} contributions={contributions} onUpdated={handleDetailUpdate} balance={metrics?.balance || 0}/>} 
+    {detail?.type === 'recurring' && <RecurringDetailSheet item={detail.data} close={()=>setDetail(null)} onUpdated={handleDetailUpdate}/>}
+    {form&&<FormSheet kind={form} close={()=>setForm(null)} done={save} categories={categories} paymentMethods={paymentMethods} balance={metrics?.balance || 0}/>} 
     {toastMsg&&<div className="toast"><Check/>{toastMsg}</div>}
   </main>
 }
