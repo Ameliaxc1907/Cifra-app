@@ -449,7 +449,7 @@ function FormSheet({ kind, close, done, categories, paymentMethods, balance }: a
         amount: Number(formData.get('amount')),
         description: formData.get('description') as string,
         category_id: formData.get('category_id') as string,
-        transaction_date: formData.get('transaction_date') as string,
+        transaction_date: new Date(formData.get('transaction_date') as string).toISOString(),
         type: type,
         payment_method_id: formData.get('payment_method_id') as string || undefined,
       }
@@ -565,6 +565,8 @@ function FormSheet({ kind, close, done, categories, paymentMethods, balance }: a
   }
 
   const filteredCategories = categories?.filter((c: any) => c.type === type) || []
+  const defaultDatetime = new Date(Date.now() - new Date().getTimezoneOffset() * 60000).toISOString().slice(0, 16);
+  const defaultDate = defaultDatetime.slice(0, 10);
 
   return <div className="overlay"><section className="sheet form-sheet"><div className="sheet-handle"/><div className="form-title"><div><small>NUEVO</small><h2>{titles[kind as keyof typeof titles]}</h2></div><button onClick={close}><X/></button></div>
   <form action={handleSubmit}>
@@ -595,8 +597,8 @@ function FormSheet({ kind, close, done, categories, paymentMethods, balance }: a
   
   {kind==='recurring'&&<><label>Frecuencia<select name="frequency" required><option value="monthly">Mensual</option><option value="weekly">Semanal</option><option value="yearly">Anual</option></select></label></>}
   
-  {kind==='movement'&&<><label>Fecha<input name="transaction_date" type="date" defaultValue={new Date().toISOString().split('T')[0]} required/></label></>}
-  {kind==='recurring'&&<><label>Fecha de inicio<input name="start_date" type="date" defaultValue={new Date().toISOString().split('T')[0]} required/></label><label>Fecha de fin (opcional)<input name="end_date" type="date" /></label></>}
+  {kind==='movement'&&<><label>Fecha y Hora<input name="transaction_date" type="datetime-local" defaultValue={defaultDatetime} required/></label></>}
+  {kind==='recurring'&&<><label>Fecha de inicio<input name="start_date" type="date" defaultValue={defaultDate} required/></label><label>Fecha de fin (opcional)<input name="end_date" type="date" /></label></>}
 
   {(kind==='movement'||kind==='recurring')&&<label>Método de pago<select name="payment_method_id"><option value="">Ninguno</option>{paymentMethods?.map((pm: any)=><option key={pm.id} value={pm.id}>{pm.name}</option>)}</select></label>}
   {kind==='movement'&&<button type="button" className="receipt-add"><Camera/>Agregar recibo <small>Próximamente</small></button>}
