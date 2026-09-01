@@ -1,22 +1,22 @@
 <div align="center">
 
+<img width="100%" src="./assets/banner.svg" alt="Cifra Banner" />
+
+<br><br>
+
 # Cifra
 
 ### Personal Finance, made simple.
 
-A mobile-first personal finance application designed to make managing your money simple, visual and intuitive.
+A mobile-first personal finance application designed to help users understand where their money goes, plan ahead and build better financial habits.
 
 <br>
-
-<img src="https://skillicons.dev/icons?i=nextjs,react,ts,supabase,postgres&theme=dark" />
-
-<br><br>
 
 `Next.js` · `React` · `TypeScript` · `Supabase` · `PostgreSQL` · `Capacitor`
 
-</div>
-
 <br>
+
+</div>
 
 ---
 
@@ -24,11 +24,11 @@ A mobile-first personal finance application designed to make managing your money
 
 <div align="center">
 
-<img src="./assets/cifra_menu.jpg" width="30%" alt="Cifra Home"/>
+<img src="./assets/cifra_menu.jpg" width="30%" alt="Cifra Dashboard"/>
 &nbsp;
-<img src="./assets/cifra_perfil.jpg" width="30%" alt="New Transaction"/>
+<img src="./assets/cifra_movimiento.jpg" width="30%" alt="New Transaction"/>
 &nbsp;
-<img src="./assets/cifra_movimiento.jpg" width="30%" alt="Cifra Profile"/>
+<img src="./assets/cifra_perfil.jpg" width="30%" alt="Cifra Profile"/>
 
 <br><br>
 
@@ -36,15 +36,17 @@ A mobile-first personal finance application designed to make managing your money
 
 </div>
 
----
+<br>
 
 ## ⌁ About Cifra
 
-**Cifra** is a personal finance application focused on helping users understand and manage their money without unnecessary complexity.
+**Cifra** is a personal finance application focused on making everyday money management simple and accessible.
 
-It provides a mobile-first experience for tracking daily finances, managing budgets, monitoring savings goals and analyzing spending habits.
+It provides a centralized space where users can register their income and expenses, create budgets, define savings goals, manage recurring payments and understand their financial activity through reports and visual insights.
 
-The application can run on the web or be packaged as a native Android application using Capacitor.
+The interface was designed with a **mobile-first approach**, while the application uses Supabase for authentication, database management and user data isolation.
+
+> The goal is simple: make personal finances easier to understand without overwhelming the user.
 
 <br>
 
@@ -54,13 +56,14 @@ The application can run on the web or be packaged as a native Android applicatio
 <tr>
 <td width="50%" valign="top">
 
-### 💸 Money Management
+### 💳 Money Management
 
-- Income & expense tracking
+- Track income and expenses
 - Custom categories
-- Payment methods
+- Multiple payment methods
 - Transaction history
-- Monthly financial overview
+- Date and time tracking
+- Financial overview
 
 </td>
 
@@ -70,9 +73,10 @@ The application can run on the web or be packaged as a native Android applicatio
 
 - Monthly budgets
 - Savings goals
-- Progress tracking
+- Budget progress tracking
 - Recurring payments
-- Financial summaries
+- Financial calendar
+- Monthly summaries
 
 </td>
 </tr>
@@ -82,10 +86,12 @@ The application can run on the web or be packaged as a native Android applicatio
 
 ### 📊 Insights
 
-- Financial analytics
-- Spending visualization
-- Monthly reports
-- PDF exports
+- Financial reports
+- Income vs. expense analysis
+- Visual activity charts
+- Monthly financial summaries
+- Automatic financial insights
+- Real-time calculations
 
 </td>
 
@@ -97,6 +103,8 @@ The application can run on the web or be packaged as a native Android applicatio
 - PostgreSQL database
 - Row Level Security
 - User-isolated financial data
+- Secure database policies
+- Protected user sessions
 
 </td>
 </tr>
@@ -108,101 +116,155 @@ The application can run on the web or be packaged as a native Android applicatio
 
 <div align="center">
 
-<img src="https://skillicons.dev/icons?i=nextjs,react,ts,supabase,postgres,android&theme=dark" />
+<img src="https://skillicons.dev/icons?i=nextjs,react,ts,supabase,postgres&theme=dark" />
 
 <br><br>
 
-| Layer | Technology |
-| :--- | :--- |
-| **Frontend** | Next.js · React · TypeScript |
-| **Backend** | Supabase |
-| **Database** | PostgreSQL |
-| **Authentication** | Supabase Auth |
-| **Security** | Row Level Security |
-| **Mobile** | Capacitor · Android |
-| **UI Icons** | Lucide React |
-
 </div>
+
+| Layer | Technology |
+| --- | --- |
+| Frontend | Next.js 14 · React |
+| Language | TypeScript |
+| Backend | Supabase |
+| Database | PostgreSQL |
+| Authentication | Supabase Auth |
+| Security | Row Level Security |
+| Mobile | Capacitor |
+| Icons | Lucide React |
+| Styling | CSS |
+| Architecture | Next.js App Router |
 
 <br>
 
 ## ⌁ Architecture
 
 ```text
-                   ┌─────────────────────┐
-                   │       USER          │
-                   └──────────┬──────────┘
-                              │
-                              ▼
-                   ┌─────────────────────┐
-                   │   Next.js + React   │
-                   │    Mobile-first UI  │
-                   └──────────┬──────────┘
-                              │
-                              ▼
-                   ┌─────────────────────┐
-                   │      Supabase       │
-                   ├─────────────────────┤
-                   │ Authentication      │
-                   │ PostgreSQL          │
-                   │ Row Level Security  │
-                   │ Database Logic      │
-                   └──────────┬──────────┘
-                              │
-                              ▼
-                   ┌─────────────────────┐
-                   │     Capacitor       │
-                   │      Android        │
-                   └─────────────────────┘
+                         ┌───────────────┐
+                         │     USER      │
+                         └───────┬───────┘
+                                 │
+                                 ▼
+                  ┌──────────────────────────┐
+                  │       CIFRA CLIENT       │
+                  │                          │
+                  │   Next.js + React        │
+                  │   Mobile-first UI        │
+                  │   TypeScript             │
+                  └────────────┬─────────────┘
+                               │
+                               ▼
+                  ┌──────────────────────────┐
+                  │         SUPABASE         │
+                  │                          │
+                  │   Authentication         │
+                  │   PostgreSQL             │
+                  │   Row Level Security     │
+                  │   Database Logic         │
+                  └────────────┬─────────────┘
+                               │
+                               ▼
+                  ┌──────────────────────────┐
+                  │     USER FINANCIAL       │
+                  │          DATA            │
+                  │                          │
+                  │ Transactions · Budgets   │
+                  │ Goals · Categories       │
+                  │ Recurring Payments       │
+                  └──────────────────────────┘
+
+
+                  ───── Mobile Build ─────
+
+                  Next.js
+                     │
+                     ▼
+                  Capacitor
+                     │
+                     ▼
+                   Android
 ```
 
 <br>
 
 ## ⌁ Project Highlights
 
-### 🔄 Smart recurring payments
+### ◇ Smart recurring payments
 
-Recurring financial movements can be processed automatically when the application is used, keeping the user's finances up to date.
+Cifra handles recurring financial movements intelligently when the user accesses the application, reducing the need for external CRON infrastructure for normal usage.
 
-### 🔒 Privacy by design
+### ◇ Privacy by design
 
-Cifra uses **Row Level Security (RLS)** so authenticated users only have access to their own financial information.
+Financial information is isolated at the database level using **PostgreSQL Row Level Security**, ensuring users only access their own data.
 
-### 📱 Mobile-first
+### ◇ Mobile-first experience
 
-The interface was designed primarily for smartphones and can be packaged as an Android application through Capacitor.
+The interface was designed around mobile usage from the beginning rather than adapting a desktop interface afterward.
 
-### 📈 Financial overview
+### ◇ Financial overview
 
-Transactions, budgets, savings goals and analytics work together to provide a clear picture of the user's finances.
+Transactions, budgets, goals and reports work together to provide users with a clearer picture of their financial situation.
+
+### ◇ Native Android support
+
+Using **Capacitor**, the web application can be packaged and distributed as an Android application while maintaining the same application logic.
 
 <br>
 
----
+## ⌁ Database
+
+Cifra uses **PostgreSQL through Supabase**.
+
+The project includes database migrations inside:
+
+```text
+supabase/migrations/
+```
+
+The main migrations configure the application's core financial structure and recurring payment logic.
+
+Additional database documentation is available in:
+
+```text
+DATABASE.md
+SUPABASE_SETUP.md
+```
+
+<br>
 
 ## ⌁ Local Development
 
-Clone the repository:
+### 1. Clone the repository
 
 ```bash
 git clone https://github.com/Ameliaxc1907/Cifra-app.git
 cd Cifra-app
 ```
 
-Install dependencies:
+### 2. Install dependencies
 
 ```bash
 npm install
 ```
 
-Create a `.env.local` file:
+### 3. Configure environment variables
+
+Create:
+
+```text
+.env.local
+```
+
+Add your own Supabase project credentials:
 
 ```env
-NEXT_PUBLIC_SUPABASE_URL=your_supabase_url
+NEXT_PUBLIC_SUPABASE_URL=your_supabase_project_url
 NEXT_PUBLIC_SUPABASE_ANON_KEY=your_supabase_anon_key
 ```
 
-Start the development server:
+> Never commit `.env.local` or private credentials to the repository.
+
+### 4. Start the development server
 
 ```bash
 npm run dev
@@ -216,33 +278,76 @@ http://localhost:3000
 
 <br>
 
-## ⌁ Database Setup
+## ⌁ Android
 
-Cifra uses **Supabase PostgreSQL**.
+Cifra can also run as an Android application through **Capacitor**.
 
-Database migrations are located inside:
+After building the web application:
 
-```text
-supabase/migrations/
+```bash
+npm run build
 ```
 
-Apply the migrations to create the required tables, policies and database logic.
+Synchronize the project with Android:
 
-> Never commit your `.env.local` file or private Supabase credentials.
+```bash
+npx cap sync android
+```
+
+The Android project is located in:
+
+```text
+android/
+```
+
+Additional instructions are available in:
+
+```text
+ANDROID_BUILD.md
+```
 
 <br>
 
----
+## ⌁ Project Structure
+
+```text
+Cifra-app/
+│
+├── android/             # Capacitor Android project
+├── app/                 # Next.js App Router
+├── assets/              # README assets and project visuals
+├── components/          # Application UI components
+├── icons/               # Application icons
+├── lib/                 # Shared logic and integrations
+├── public/              # Static resources
+├── supabase/            # Database configuration & migrations
+│
+├── ANDROID_BUILD.md
+├── DATABASE.md
+├── PRODUCTION_CHECKLIST.md
+├── SUPABASE_SETUP.md
+├── capacitor.config.ts
+├── package.json
+└── README.md
+```
+
+<br>
 
 ## ⌁ Project Status
 
-```text
-STATUS      ████████████████████  Complete
-PLATFORM    Web + Android
-FOCUS       Personal Finance
-```
+<div align="center">
 
-Cifra is functional and actively maintained as improvements and new ideas are explored.
+### ✓ COMPLETE
+
+The main version of Cifra is functional and complete.
+
+Future development may include new features, UI improvements and additional financial tools.
+
+<br>
+
+`design` · `build` · `learn` · `improve`
+
+</div>
 
 <br>
 
@@ -250,16 +355,18 @@ Cifra is functional and actively maintained as improvements and new ideas are ex
 
 <div align="center">
 
-### ✦ Cifra
+### ✦ CIFRA
 
-**Built to make personal finance a little less complicated.**
+**Personal Finance, made simple.**
 
-<br>
-
-`design · build · learn · improve`
+<sub>Built to make personal finance a little less complicated.</sub>
 
 <br><br>
 
-<sub>Developed by Amelia Vergara</sub>
+Developed by **Amelia Vergara**
+
+<br>
+
+[GitHub Profile](https://github.com/Ameliaxc1907)
 
 </div>
