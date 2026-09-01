@@ -24,15 +24,17 @@ A mobile-first personal finance application designed to make managing your money
 
 <div align="center">
 
-<!-- Próximamente pondremos aquí las capturas de la aplicación -->
+<img src="./assets/cifra_menu.jpg" width="30%" alt="Cifra Home"/>
+&nbsp;
+<img src="./assets/cifra_perfil.jpg" width="30%" alt="New Transaction"/>
+&nbsp;
+<img src="./assets/cifra_movimiento.jpg" width="30%" alt="Cifra Profile"/>
 
-**Screenshots coming soon**
+<br><br>
 
-<sub>Dashboard · Transactions · Budgets · Analytics</sub>
+<sub>Dashboard · Transaction Management · Financial Profile</sub>
 
 </div>
-
-<br>
 
 ---
 
